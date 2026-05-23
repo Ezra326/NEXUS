@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MBTI Nexus - 成员申请记录</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#0a0a0f; color:#e0e0e0; font-family:'Courier New',monospace; min-height:100vh; }
+
+/* ---------- Password Gate ---------- */
+#pass-gate {
+  position:fixed; inset:0; z-index:9999; background:radial-gradient(ellipse at center, #0D1117 0%, #0A0A0F 100%);
+  display:flex; align-items:center; justify-content:center;
+}
+.gate-box {
+  text-align:center; max-width:380px; width:90%; padding:40px 32px;
+  border:1px solid rgba(180,0,255,0.2); background:rgba(10,10,15,0.95);
+  box-shadow:0 0 40px rgba(180,0,255,0.08);
+}
+.gate-box h2 { color:#00FFF5; font-size:20px; margin-bottom:6px; letter-spacing:2px; }
+.gate-box .gate-sub { color:#555; font-size:11px; margin-bottom:28px; }
+.gate-box input {
+  width:100%; background:#0A0A0F; border:1px solid rgba(180,0,255,0.25);
+  padding:12px 16px; color:#E0E0E0; font-family:'Courier New',monospace;
+  font-size:16px; text-align:center; letter-spacing:4px; outline:none;
+  transition:all 0.3s;
+}
+.gate-box input:focus { border-color:#B400FF; box-shadow:0 0 12px rgba(180,0,255,0.2); }
+.gate-box input::placeholder { color:#333; letter-spacing:1px; }
+.gate-box button {
+  width:100%; margin-top:16px; padding:12px; cursor:pointer;
+  background:transparent; color:#00FFF5; border:1px solid rgba(0,255,245,0.25);
+  font-family:'Courier New',monospace; font-size:14px; letter-spacing:2px;
+  transition:all 0.3s;
+}
+.gate-box button:hover { background:rgba(0,255,245,0.06); border-color:#00FFF5; }
+.gate-err { color:#FF6B35; font-size:12px; margin-top:12px; min-height:18px; }
+
+/* ---------- Admin Panel (hidden until auth) ---------- */
+#admin-panel { display:none; padding:40px 20px; }
+#admin-panel.show { display:block; }
+
+h1 { color:#00FFF5; font-size:24px; margin-bottom:8px; text-align:center; }
+.subtitle { color:#666; font-size:12px; text-align:center; margin-bottom:30px; }
+table { width:100%; max-width:1000px; margin:0 auto; border-collapse:collapse; }
+th { color:#B400FF; font-size:12px; text-align:left; padding:12px 16px; border-bottom:2px solid rgba(180,0,255,0.2); text-transform:uppercase; letter-spacing:1px; }
+td { padding:14px 16px; border-bottom:1px solid #1a1a2e; font-size:13px; }
+tr:hover td { background:rgba(255,255,255,0.03); }
+.mbti-badge { display:inline-block; padding:2px 10px; border-radius:3px; font-size:11px; font-weight:bold; letter-spacing:1px; }
+.mbti-NT { background:rgba(0,255,245,0.1); color:#00FFF5; border:1px solid rgba(0,255,245,0.25); }
+.mbti-NF { background:rgba(180,0,255,0.1); color:#B400FF; border:1px solid rgba(180,0,255,0.25); }
+.mbti-SP { background:rgba(255,107,53,0.1); color:#FF6B35; border:1px solid rgba(255,107,53,0.25); }
+.mbti-SJ { background:rgba(0,255,136,0.1); color:#00FF88; border:1px solid rgba(0,255,136,0.25); }
+.empty { text-align:center; color:#555; padding:60px 20px; font-size:14px; }
+.count { text-align:center; color:#FF6B35; font-size:13px; margin-bottom:20px; }
+.refresh { display:block; margin:30px auto; padding:10px 30px; background:transparent; color:#00FFF5; border:1px solid rgba(0,255,245,0.25); cursor:pointer; font-family:inherit; font-size:13px; letter-spacing:1px; }
+.refresh:hover { background:rgba(0,255,245,0.05); border-color:#00FFF5; }
+.back { display:block; margin:20px auto; text-align:center; color:#555; text-decoration:none; font-size:12px; }
+.back:hover { color:#00FFF5; }
+.status { text-align:center; padding:10px; font-size:12px; }
+.status.on { color:#00FF88; }
+.status.off { color:#FF6B35; }
+
+.logout-btn { position:fixed; top:16px; right:20px; padding:6px 16px; background:transparent; color:#FF6B35; border:1px solid rgba(255,107,53,0.25); cursor:pointer; font-family:'Courier New',monospace; font-size:11px; letter-spacing:1px; transition:all 0.3s; }
+.logout-btn:hover { background:rgba(255,107,53,0.08); border-color:#FF6B35; }
+
+/* Action Buttons */
+.action-btn {
+  display:inline-block; padding:4px 12px; margin:0 2px; cursor:pointer;
+  background:transparent; border:1px solid; font-family:'Courier New',monospace;
+  font-size:11px; letter-spacing:1px; transition:all 0.25s; white-space:nowrap;
+}
+.action-btn.copy-btn { color:#00FFF5; border-color:rgba(0,255,245,0.2); }
+.action-btn.copy-btn:hover { background:rgba(0,255,245,0.08); border-color:#00FFF5; box-shadow:0 0 8px rgba(0,255,245,0.15); }
+.action-btn.copy-btn.copied { color:#00FF88; border-color:#00FF88; }
+.action-btn.del-btn { color:#FF4466; border-color:rgba(255,68,102,0.2); }
+.action-btn.del-btn:hover { background:rgba(255,68,102,0.08); border-color:#FF4466; box-shadow:0 0 8px rgba(255,68,102,0.15); }
+.actions-col { text-align:right; white-space:nowrap; }
+</style>
+</head>
+<body>
+
+<!-- ====== Password Gate ====== -->
+<div id="pass-gate">
+  <div class="gate-box">
+    <h2>MBTI NEXUS</h2>
+    <p class="gate-sub">ADMIN ACCESS REQUIRED</p>
+    <input type="password" id="pass-input" placeholder="输入访问密码" maxlength="32" autocomplete="off">
+    <button id="pass-submit">验 证</button>
+    <div class="gate-err" id="gate-err"></div>
+  </div>
+</div>
+
+<!-- ====== Admin Panel ====== -->
+<div id="admin-panel">
+  <h1>MBTI NEXUS</h1>
+  <p class="subtitle">成员申请记录</p>
+  <div id="status-bar"></div>
+  <div id="content"><p class="empty">加载中...</p></div>
+  <button class="refresh" onclick="loadData()">刷新数据</button>
+  <a class="back" href="/">← 返回主页</a>
+  <button class="logout-btn" onclick="doLogout()">退出</button>
+</div>
+
+<script src="https://static.cloudbase.net/cloudbase-js-sdk/latest/cloudbase.full.js"></script>
+<script>
+// ========== Password Auth ==========
+const PASS_HASH = 'eebf703c89f67997bc64888fcd2a1e931bda4d3df29e3f083fe9c905243349ca';
+const STORAGE_KEY = 'mbti_admin_auth';
+
+(async function initAuth() {
+  if (sessionStorage.getItem(STORAGE_KEY) === '1') {
+    showPanel();
+    return;
+  }
+
+  const input = document.getElementById('pass-input');
+  const btn = document.getElementById('pass-submit');
+  const err = document.getElementById('gate-err');
+
+  async function verify() {
+    const raw = input.value.trim();
+    if (!raw) { err.textContent = '请输入密码'; return; }
+
+    const encoder = new TextEncoder();
+    const data = encoder.encode(raw);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+    if (hashHex === PASS_HASH) {
+      sessionStorage.setItem(STORAGE_KEY, '1');
+      showPanel();
+    } else {
+      err.textContent = '密码错误，请重试';
+      input.value = '';
+      input.focus();
+    }
+  }
+
+  btn.addEventListener('click', verify);
+  input.addEventListener('keydown', function(e) { if (e.key === 'Enter') verify(); });
+  input.focus();
+})();
+
+function showPanel() {
+  document.getElementById('pass-gate').style.display = 'none';
+  document.getElementById('admin-panel').classList.add('show');
+  loadData();
+}
+
+function doLogout() {
+  sessionStorage.removeItem(STORAGE_KEY);
+  location.reload();
+}
+
+// ========== Data Loading ==========
+const app = cloudbase.init({ env: "ezra-d3gggny60067d8240" });
+const auth = app.auth();
+const mbtiGroup = {
+  INTJ:'NT',INTP:'NT',ENTJ:'NT',ENTP:'NT',
+  INFJ:'NF',INFP:'NF',ENFJ:'NF',ENFP:'NF',
+  ISTP:'SP',ISFP:'SP',ESTP:'SP',ESFP:'SP',
+  ISTJ:'SJ',ISFJ:'SJ',ESTJ:'SJ',ESFJ:'SJ'
+};
+
+async function loadData(){
+  const bar = document.getElementById('status-bar');
+  const c = document.getElementById('content');
+  try {
+    bar.innerHTML = '<p class="status" style="color:#FF6B35;">● 正在连接...</p>';
+
+    let loginState = await auth.getLoginState();
+    if (!loginState) {
+      await auth.anonymousAuthProvider().signIn();
+    }
+
+    const db = app.database();
+    const res = await db.collection("submissions")
+      .orderBy("createdAt", "desc")
+      .limit(500)
+      .get();
+
+    bar.innerHTML = '<p class="status on">● 服务器连接正常</p>';
+
+    const data = res.data || [];
+    if (data.length === 0) {
+      c.innerHTML = '<p class="empty">暂无申请记录</p>';
+      return;
+    }
+    let rows = '';
+    data.forEach((d, i) => {
+      const group = mbtiGroup[d.mbti_type] || 'NT';
+      const wid = (d.wechat || '').replace(/'/g, "\\'");
+      const docId = (d._id || '').replace(/'/g, "\\'");
+      rows += '<tr>' +
+        '<td>' + (data.length - i) + '</td>' +
+        '<td>' + d.nickname + '</td>' +
+        '<td><span class="mbti-badge mbti-' + group + '">' + d.mbti_type + '</span></td>' +
+        '<td>' + d.wechat + '</td>' +
+        '<td>' + d.city + '</td>' +
+        '<td style="color:#888;font-size:11px;">' + (d.time || '') + '</td>' +
+        '<td class="actions-col">' +
+          '<button class="action-btn copy-btn" onclick="copyWechat(\'' + wid + '\',this)" title="复制微信号">COPY</button>' +
+          '<button class="action-btn del-btn" onclick="deleteRecord(\'' + docId + '\',this)" title="删除记录">DEL</button>' +
+        '</td>' +
+        '</tr>';
+    });
+    c.innerHTML = '<p class="count">共 ' + data.length + ' 条申请记录</p><table><thead><tr><th>#</th><th>昵称</th><th>MBTI</th><th>微信</th><th>城市</th><th>时间</th><th style="text-align:right;">操作</th></tr></thead><tbody>' + rows + '</tbody></table>';
+  } catch(e) {
+    console.error('loadData error:', e);
+    bar.innerHTML = '<p class="status off">● 连接失败: ' + (e.message || '网络错误') + '</p>';
+    c.innerHTML = '<p class="empty">连接失败: ' + (e.message || '未知错误') + '</p>';
+  }
+}
+
+// ========== Copy WeChat ==========
+function copyWechat(text, btn) {
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(function() {
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500);
+  }).catch(function() {
+    // Fallback for older browsers
+    var ta = document.createElement('textarea');
+    ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+    btn.textContent = '✓';
+    btn.classList.add('copied');
+    setTimeout(function() { btn.textContent = 'COPY'; btn.classList.remove('copied'); }, 1500);
+  });
+}
+
+// ========== Delete Record ==========
+async function deleteRecord(docId, btn) {
+  if (!docId) return;
+  if (!confirm('确认删除这条申请记录？此操作不可撤销。')) return;
+  var originalText = btn.textContent;
+  btn.textContent = '...';
+  btn.disabled = true;
+  try {
+    var db = app.database();
+    await db.collection("submissions").doc(docId).remove();
+    // Remove the row from DOM
+    var tr = btn.closest('tr');
+    if (tr) tr.style.opacity = '0';
+    setTimeout(function() {
+      if (tr) tr.remove();
+      // Update count
+      var remaining = document.querySelectorAll('#content tbody tr').length;
+      var countEl = document.querySelector('#content .count');
+      if (countEl) countEl.textContent = '共 ' + remaining + ' 条申请记录';
+      if (remaining === 0) {
+        document.getElementById('content').innerHTML = '<p class="empty">暂无申请记录</p>';
+      }
+    }, 300);
+  } catch(e) {
+    alert('删除失败: ' + (e.message || '未知错误'));
+    btn.textContent = originalText;
+    btn.disabled = false;
+  }
+}
+</script>
+</body>
+</html>
